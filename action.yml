@@ -53,8 +53,8 @@ runs:
         token: ${{ inputs.token }}
         fetch-depth: 0
 
-    - name: Move contents to root
-      shell: bash
-      run: |
-        echo "Moving contents of ${{ inputs.path }} to ./"
-        cp -a "${{ inputs.path }}/." ./
+    # - name: Move contents to root
+    #   shell: bash
+    #   run: |
+    #     echo "Moving contents of ${{ inputs.path }} to ./"
+    #     cp -a "${{ inputs.path }}/." ./
