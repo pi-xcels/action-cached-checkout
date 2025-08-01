@@ -1,6 +1,7 @@
-name: "Cached Checkout"
-description: "Caches and checks out the repository, downloading a previously cached version if available."
+name: "Cached Checkout with Artifacts"
+description: "Caches and checks out the repository using artifacts."
 author: pi-xcels
+
 inputs:
   repository:
     description: 'Repository name and owner in the format "owner/repo". Defaults to the current repository.'
@@ -21,31 +22,32 @@ inputs:
 
 outputs:
   cache-hit:
-    description: "Boolean indicating if the checkout cache was hit."
-    value: ${{ steps.restore-cache.outputs.cache-hit }}
+    description: "Boolean indicating if the checkout artifact was restored."
+    value: ${{ steps.check-artifact.outputs.restored }}
 
 runs:
   using: "composite"
   steps:
-    - name: Set cache key variables
-      id: set-cache-key
+    - name: Try to download cached artifact
+      id: restore
+      uses: actions/download-artifact@v4
+      continue-on-error: true
+      with:
+        name: pixcels-checkout-${{ github.sha }}
+        path: ${{ inputs.path }}
+
+    - name: Check if artifact was restored
+      id: check-artifact
       shell: bash
       run: |
-        echo "cache_key=${{ runner.os }}-${{ inputs.repository }}-cache-checkout-${{ github.sha }}" >> $GITHUB_OUTPUT
-        echo "restore_key=${{ runner.os }}-${{ inputs.repository }}-cache-checkout-" >> $GITHUB_OUTPUT
+        if [ "$(ls -A '${{ inputs.path }}' 2>/dev/null)" ]; then
+          echo "restored=true" >> $GITHUB_OUTPUT
+        else
+          echo "restored=false" >> $GITHUB_OUTPUT
+        fi
 
-    - name: Restore checkout cache
-      id: restore-cache
-      uses: actions/cache@v4
-      with:
-        path: ${{ inputs.path }}
-        key: ${{ steps.set-cache-key.outputs.cache_key }}
-        restore-keys: |
-          ${{ steps.set-cache-key.outputs.restore_key }}
-
-    # Using custom path to retain checkout across workflow/job triggers
-    - name: Checkout code (if cache miss)
-      if: steps.restore-cache.outputs.cache-hit != 'true'
+    - name: Checkout repository (if artifact not restored)
+      if: steps.check-artifact.outputs.restored != 'true'
       uses: actions/checkout@v4
       with:
         repository: ${{ inputs.repository }}
@@ -54,8 +56,19 @@ runs:
         path: ${{ inputs.path }}
         fetch-depth: 0
 
+    - name: Upload artifact (if checkout happened)
+      if: steps.check-artifact.outputs.restored != 'true'
+      uses: actions/upload-artifact@v4
+      with:
+        name: pixcels-checkout-${{ github.sha }}
+        path: ${{ inputs.path }}
+        retention-days: 1
+        include-hidden-files: true
+        compression-level: 9
+
     - name: Move contents to root
       shell: bash
       run: |
         echo "Moving contents of ${{ inputs.path }} to ./"
         cp -a "${{ inputs.path }}/." ./
+        rm -rf "${{ inputs.path }}"
