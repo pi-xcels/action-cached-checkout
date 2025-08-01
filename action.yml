@@ -51,7 +51,6 @@ runs:
         repository: ${{ inputs.repository }}
         ref: ${{ inputs.ref }}
         token: ${{ inputs.token }}
-        path: ${{ inputs.path }}
         fetch-depth: 0
 
     - name: Move contents to root
