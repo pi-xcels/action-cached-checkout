@@ -72,7 +72,7 @@ runs:
         cp -a "${{ inputs.path }}/." ./
         rm -rf "${{ inputs.path }}"
 
-    - name: Debug: Check for expected files
+    - name: Check for expected files
       shell: bash
       run: |
         echo "Checking for .github/actions/netbird-connect/action.yml"
@@ -85,4 +85,3 @@ runs:
           echo "Contents of .github/actions/netbird-connect:"
           ls -al .github/actions/netbird-connect || echo "(directory missing)"
         fi
-
