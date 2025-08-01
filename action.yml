@@ -70,3 +70,4 @@ runs:
       run: |
         echo "Moving contents of ${{ inputs.path }} to ./"
         cp -a "${{ inputs.path }}/." ./
+        rm -rf "${{ inputs.path }}"
