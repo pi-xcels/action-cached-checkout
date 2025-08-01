@@ -72,17 +72,3 @@ runs:
         echo "Moving contents of ${{ inputs.path }} to ./"
         cp -a "${{ inputs.path }}/." ./
         rm -rf "${{ inputs.path }}"
-
-    - name: Check for expected files
-      shell: bash
-      run: |
-        echo "Checking for .github/actions/netbird-connect/action.yml"
-        if [ -f ".github/actions/netbird-connect/action.yml" ]; then
-          echo "action.yml found!"
-        else
-          echo "action.yml NOT found."
-          echo "Contents of .github/actions:"
-          ls -al .github/actions
-          echo "Contents of .github/actions/netbird-connect:"
-          ls -al .github/actions/netbird-connect || echo "(directory missing)"
-        fi
