@@ -63,6 +63,7 @@ runs:
         name: pixcels-checkout-${{ github.sha }}
         path: ${{ inputs.path }}
         retention-days: 1
+        include-hidden-files: true
         compression-level: 9
 
     - name: Move contents to root
