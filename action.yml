@@ -28,7 +28,7 @@ outputs:
 runs:
   using: "composite"
   steps:
-    - name: Try to download cached artifact
+    - name: Try to download cached tarball
       id: restore
       uses: actions/download-artifact@v4
       continue-on-error: true
@@ -40,11 +40,19 @@ runs:
       id: check-artifact
       shell: bash
       run: |
-        if [ "$(ls -A '${{ inputs.path }}' 2>/dev/null)" ]; then
+        if [ -f "${{ inputs.path }}/checkout.tar.gz" ]; then
           echo "restored=true" >> $GITHUB_OUTPUT
         else
           echo "restored=false" >> $GITHUB_OUTPUT
         fi
+
+    - name: Extract tarball (if restored)
+      if: steps.check-artifact.outputs.restored == 'true'
+      shell: bash
+      run: |
+        mkdir -p ${{ inputs.path }}
+        tar -xzf "${{ inputs.path }}/checkout.tar.gz" -C "${{ inputs.path }}"
+        rm -f "${{ inputs.path }}/checkout.tar.gz"
 
     - name: Checkout repository (if artifact not restored)
       if: steps.check-artifact.outputs.restored != 'true'
@@ -56,12 +64,18 @@ runs:
         path: ${{ inputs.path }}
         fetch-depth: 0
 
-    - name: Upload artifact (if checkout happened)
+    - name: Archive checkout to tar.gz (if checkout happened)
+      if: steps.check-artifact.outputs.restored != 'true'
+      shell: bash
+      run: |
+        tar -czf checkout.tar.gz -C "${{ inputs.path }}" .
+
+    - name: Upload tarball artifact
       if: steps.check-artifact.outputs.restored != 'true'
       uses: actions/upload-artifact@v4
       with:
         name: pixcels-checkout-${{ github.sha }}
-        path: ${{ inputs.path }}
+        path: checkout.tar.gz
         retention-days: 1
         include-hidden-files: true
         compression-level: 9
