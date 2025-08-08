@@ -40,9 +40,14 @@ runs:
       id: check-artifact
       shell: bash
       run: |
+        echo "Debug: Listing contents of tmp-artifact/"
+        ls -lah tmp-artifact || echo "tmp-artifact not found"
+
         if [ -f "tmp-artifact/checkout.tar.gz" ]; then
+          echo "checkout.tar.gz found"
           echo "restored=true" >> $GITHUB_OUTPUT
         else
+          echo "checkout.tar.gz NOT found"
           echo "restored=false" >> $GITHUB_OUTPUT
         fi
 
