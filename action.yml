@@ -34,13 +34,13 @@ runs:
       continue-on-error: true
       with:
         name: pixcels-checkout-${{ github.sha }}
-        path: ${{ inputs.path }}
+        path: tmp-artifact
 
     - name: Check if artifact was restored
       id: check-artifact
       shell: bash
       run: |
-        if [ -f "${{ inputs.path }}/checkout.tar.gz" ]; then
+        if [ -f "tmp-artifact/checkout.tar.gz" ]; then
           echo "restored=true" >> $GITHUB_OUTPUT
         else
           echo "restored=false" >> $GITHUB_OUTPUT
@@ -50,9 +50,9 @@ runs:
       if: steps.check-artifact.outputs.restored == 'true'
       shell: bash
       run: |
-        mkdir -p ${{ inputs.path }}
-        tar -xzf "${{ inputs.path }}/checkout.tar.gz" -C "${{ inputs.path }}"
-        rm -f "${{ inputs.path }}/checkout.tar.gz"
+        mkdir -p "${{ inputs.path }}"
+        tar -xzf "tmp-artifact/checkout.tar.gz" -C "${{ inputs.path }}"
+        rm -rf tmp-artifact
 
     - name: Checkout repository (if artifact not restored)
       if: steps.check-artifact.outputs.restored != 'true'
